@@ -23,7 +23,7 @@ passwd=config["passwd"]
 db=config["db1"]
 connect_timeout=config["connect_timeout"]
 
-db_url = "mariadb+mariadbconnector://user:passwd@host:port/db?charset=utf8"
+db_url = "".join(["mariadb+mariadbconnector://", user, ":", passwd, "@", host, ":", port, "/", db, "?charset=utf8"])
 engine = create_engine(db_url)
 
 Base = declarative_base()
