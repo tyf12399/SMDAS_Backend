@@ -26,8 +26,8 @@ db = config["db2"]
 connect_timeout = config["connect_timeout"]
 
 # db_url = "".join(["mariadb+mariadbconnector://", user, ":", passwd, "@", host, ":", port, "/", db, "?charset=utf8"]
-db_url = "mariadb+mariadbconnector://Predestine@1.15.99.208:3306/smdas_stock?charset=utf8"
-engine = create_engine(db_url,poolclass=NullPool)
+db_url = "mysql+pymysql://Predestine@1.15.99.208:3306/smdas_stock?charset=utf8"
+engine = create_engine(db_url)
 
 Base = declarative_base()
 
@@ -97,7 +97,8 @@ class transaction_data_seperate(Base):
 # create the session
 Session = sessionmaker(bind=engine)
 Session = Session()
-# define the kline table
+
+# define the kline table and update data
 dtype = {
     'open_price': np.float64, 'close_price': np.float64,
     'highest_price': np.float64, 'lowest_price': np.float64,
@@ -108,6 +109,8 @@ data = pd.read_csv('D:/Python Project/SMDAS_Backend/sh_kline.csv', dtype=dtype, 
 
 data.to_sql('kline_graph', engine, if_exists='replace', index=False)
 
+Session.commit()
+Session.close()
 # #create the record
 # def create_company_basic_info(self):
 #     Basic = company_basic_info(
@@ -132,11 +135,11 @@ data.to_sql('kline_graph', engine, if_exists='replace', index=False)
 #     Session.commit()
 #
 # def create_kline_graph(self):
-#     Kline = kline_graph(
+#    Kline = kline_graph(
 #
-#     )
-#     Session.add(Kline)
-#     Session.commit()
+#    )
+#    Session.add(Kline)
+#    Session.commit()
 #
 # def create_transaction_data_seperate(self):
 #     Transaction = transaction_data_seperate(
@@ -161,10 +164,10 @@ data.to_sql('kline_graph', engine, if_exists='replace', index=False)
 #     Shareholder.attribute = 'Target'
 #     Session.commit()
 #
-# def modify_kline_graph_info(self):
-#     Kline = Session.query(kline_graph).filter_by(Query Criteria).first()
-#     Kline.attribute = 'Target'
-#     Session.commit()
+def modify_kline_graph_info(self):
+    Kline = Session.query(kline_graph).filter_by(Query Criteria).first()
+    Kline.attribute = 'Target'
+    Session.commit()
 #
 # def modify_transaction_data_seperate(self):
 #     Transaction = Session.query(transaction_data_seperate).filter_by(Query Criteria).first()
@@ -187,10 +190,10 @@ data.to_sql('kline_graph', engine, if_exists='replace', index=False)
 #     Session.delete(Shareholder)
 #     Session.commit()
 #
-# def delete_kline_graph_info(self):
-#     Kline = Session.query(kline_graph).filter_by(Query Criteria).first()
-#     Session.delete(Kline)
-#     Session.commit()
+def delete_kline_graph_info(self):
+    Kline = Session.query(kline_graph).filter_by(Query Criteria).first()
+    Session.delete(Kline)
+    Session.commit()
 #
 # def delete_transaction_data_seperate(self):
 #     Transaction = Session.query(transaction_data_seperate).filter_by(Query Criteria).first()
@@ -207,8 +210,8 @@ data.to_sql('kline_graph', engine, if_exists='replace', index=False)
 # def company_shareholder_info_query(self):
 #     Shareholder = Session.query(company_shareholder_info).filter(keyword condition).all()
 #
-# def kline_graph_query(self):
-#     Kline = Session.query(kline_graph).filter(keyword condition).all()
+def kline_graph_query(self):
+    Kline = Session.query(kline_graph).filter(keyword condition).all()
 #
 # def transaction_data_seperate_query(self):
 #     Transaction = Session.query(transaction_data_seperate).filter(keyword condition).all()
