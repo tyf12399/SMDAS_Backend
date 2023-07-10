@@ -1,18 +1,17 @@
 import datetime
-import requests
-from lxml import etree
-import pymysql
-import pandas as pd
+import numpy as np
 import os
-
-from sqlalchemy import create_engine
+import pandas as pd
+import pymysql
+import requests
+from dotenv import dotenv_values
+from lxml import etree
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, FLOAT, Date
 from sqlalchemy import Table
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
+from sqlalchemy import create_engine
 from sqlalchemy.orm import column_property, relationship, deferred
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
-
-from dotenv import dotenv_values
 
 config = dotenv_values(".env")
 
@@ -51,18 +50,18 @@ def create_user(self):
     Session.commit()
 
 #modify the record
-def modify_user(self):
-    Info = Session.query(info).filter_by(Query Criteria).first()
+def modify_user(QueryCriteria):
+    Info = Session.query(info).filter_by(QueryCriteria).first()
     Info.attribute = 'Target'
     Session.commit()
 
 #delete the record
-def delete_user(self):
-    Info = Session.query(info).filter_by(Query Criteria).first()
+def delete_user(QueryCriteria):
+    Info = Session.query(info).filter_by(QueryCriteria).first()
     Session.delete(Info)
     Session.commit()
 
 #basic query
-def info_query(self):
-    Info = Session.query(info).filter(keyword condition).all()
+def info_query(keywordcondition):
+    Info = Session.query(info).filter(keywordcondition).all()
 

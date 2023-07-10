@@ -1,11 +1,19 @@
+import datetime
+import numpy as np
+import os
+import pandas as pd
+import pymysql
+import requests
 from dotenv import dotenv_values
-from sqlalchemy import Column
+from lxml import etree
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, FLOAT, Date
+from sqlalchemy import Table
 from sqlalchemy import create_engine
+from sqlalchemy.orm import column_property, relationship, deferred
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 config = dotenv_values(".env")
-
 host = config["host"]
 port = config["port"]
 user = config["user"]
@@ -13,10 +21,10 @@ passwd = config["passwd"]
 db = config["db3"]
 connect_timeout = config["connect_timeout"]
 
-db_url = "".join(["mariadb+mariadbconnector://", user, ":", passwd, "@", host, ":", port, "/", db, "?charset=utf8"])
+db_url = "".join(["mysql+pymysql://", user, ":", passwd, "@", host, ":", port, "/", db, "?charset=utf8"])
 engine = create_engine(db_url)
-
 Base = declarative_base()
+Session = sessionmaker(engine)
 
 
 # class the table
@@ -36,63 +44,61 @@ class personality_module(Base):
     history = Column(str)
 
 
-Session = sessionmaker(bind=engine)
-Session = Session()
-
-
 # create the record
 def create_discretionary_stock(self):
-    Discretionary = discretionary_stock(
+    with Session() as session:
+        discretionary = discretionary_stock(
 
-    )
-    Session.add(discretionary_stock)
-    Session.commit()
+        )
+        Session.add(discretionary_stock)
+        Session.commit()
 
 
 def create_personality_module(self):
-    Personality = personality_module(
+    with Session() as session:
+        personality = personality_module(
 
-    )
-    Session.add(personality_module)
-    Session.commit()
+        )
+        Session.add(personality_module)
+        Session.commit()
 
 
 # modify the record
-def modify_discretionary_stock(self):
-    Discretionary = Session.query(discretionary_stock).filter_by(Query
-    Criteria).first()
-    Discretionary.attribute = 'Target'
-    Session.commit()
+def modify_discretionary_stock(QueryCriteria, Target):
+    with Session() as session:
+        discretionary = Session.query(discretionary_stock).filter_by(QueryCriteria).first()
+        discretionary.attribute = 'Target'
+        Session.commit()
 
 
-def modify_personality_module(self):
-    Personality = Session.query(personality_module).filter_by(Query
-    Criteria).first()
-    Personality.attribute = 'Target'
-    Session.commit()
+def modify_personality_module(QueryCriteria, Target):
+    with Session() as session:
+        personality = Session.query(personality_module).filter_by(QueryCriteria).first()
+        personality.attribute = 'Target'
+        Session.commit()
 
 
 # delete the record
-def delete_discretionary_stock(self):
-    Discretionary = Session.query(discretionary_stock).filter_by(Query
-    Criteria).first()
-    Session.delete(Discretionary)
-    Session.commit()
+def delete_discretionary_stock(QueryCriteria):
+    with Session() as session:
+        discretionary = Session.query(discretionary_stock).filter_by(QueryCriteria).first()
+        Session.delete(discretionary)
+        Session.commit()
 
 
-def delete_personality_module(self):
-    Personality = Session.query(personality_module).filter_by(Query
-    Criteria).first()
-    Session.delete(Personality)
-    Session.commit()
+def delete_personality_module(QueryCriteria):
+    with Session() as session:
+        personality = Session.query(personality_module).filter_by(QueryCriteria).first()
+        Session.delete(personality)
+        Session.commit()
 
 
 # basic query
-def discretionary_stock_query(self):
-    Discretionary = Session.query(discretionary_stock).filter(keyword
-    condition).all()
+def discretionary_stock_query(keywordcondition):
+    with Session() as session:
+        discretionary = Session.query(discretionary_stock).filter(keywordcondition).all()
 
 
-def personality_module_query(self):
-    Personality = Session.query(personality_module).filter(keyword
-    condition).all()
+def personality_module_query(keywordcondition):
+    with Session() as session:
+        personality = Session.query(personality_module).filter(keywordcondition).all()
