@@ -8,6 +8,8 @@ from typing import Union, Dict, Any
 
 from fastapi import APIRouter, Request
 
+from services.user_control_admin import select_user
+
 router = APIRouter(prefix="/backend", tags=["CMS"])
 
 
@@ -42,16 +44,16 @@ async def login(request: Request):
 # user management
 @router.get("/user/list_get")
 async def user_list_get(
-        current: int,
-        pageSize: int,
-        account: Union[int, None] = None,
-        nickname: Union[str, None] = None,
-        state: Union[bool, None] = None,
-        create_start_time: Union[str, None] = None,  # YYYY-MM-DD
-        create_end_time: Union[str, None] = None,  # YYYY-MM-DD
-        # login time means the time when the user last login
-        login_start_time: Union[str, None] = None,  # YYYY-MM-DD
-        login_end_time: Union[str, None] = None,  # YYYY-MM-DD
+    current: int,
+    pageSize: int,
+    account: Union[int, None] = None,
+    nickname: Union[str, None] = None,
+    state: Union[bool, None] = None,
+    create_start_time: Union[str, None] = None,  # YYYY-MM-DD
+    create_end_time: Union[str, None] = None,  # YYYY-MM-DD
+    # login time means the time when the user last login
+    login_start_time: Union[str, None] = None,  # YYYY-MM-DD
+    login_end_time: Union[str, None] = None,  # YYYY-MM-DD
 ) -> Dict[str, Any]:
     """
     Get user list.
@@ -66,9 +68,26 @@ async def user_list_get(
     :param login_end_time: last login time end
     :return: user list
     """
-    # TODO(2023-7-8):read data from info table in user database
-    print(current)
-    return {"status": "ok"}
+    resp = dict()
+
+    user_list = select_user(
+        account,
+        nickname,
+        state,
+        create_start_time,
+        create_end_time,
+        login_start_time,
+        login_end_time,
+    )
+    keys_to_keep = ["account", "nickname", "state", "created_at", "login_at"]
+
+    data = [{key: user[key] for key in keys_to_keep} for user in user_list]
+    resp["total"] = len(data)
+    resp["data"] = data[(current - 1) * pageSize : current * pageSize]
+    resp["page"] = current
+    resp["success"] = True
+
+    return resp
 
 
 @router.post("/user/info_change")

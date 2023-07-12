@@ -1,6 +1,37 @@
-"""crawler for the website: https://www.eastmoney.com/"""
+"""crawler for the website: https://www.eastmoney.com/ and save it in the database"""
 import requests
 from bs4 import BeautifulSoup
+from dotenv import dotenv_values
+from sqlalchemy import create_engine, insert
+from sqlalchemy.orm import Session
+
+from get_data.smdas_stock import DailyNewsUrl
+
+config = dotenv_values("../.env")
+
+host = config["host"]
+port = config["port"]
+user = config["user"]
+passwd = config["passwd"]
+db = config["db2"]
+connect_timeout = config["connect_timeout"]
+
+db_url = "".join(
+    [
+        "mariadb+mariadbconnector://",
+        user,
+        ":",
+        passwd,
+        "@",
+        host,
+        ":",
+        port,
+        "/",
+        db,
+        "?charset=utf8",
+    ]
+)
+engine = create_engine(db_url)
 
 
 class Crawler:
@@ -37,9 +68,10 @@ class Crawler:
         :return:
         """
         finance_news = self.get_news()
-        print(finance_news)
-
-
-if __name__ == "__main__":
-    crawler = Crawler()
-    crawler.save_news()
+        print(len(finance_news))
+        with Session(engine) as session:
+            session.execute(
+                insert(DailyNewsUrl),
+                finance_news,
+            )
+            session.commit()
