@@ -1,11 +1,9 @@
-import numpy as np
-import pandas as pd
 from dotenv import dotenv_values
-from sqlalchemy import create_engine, select, update, delete
+from dotenv import dotenv_values
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
-from get_data.smdas_stock import CompanyBasicInfo, CompanyFinancialInfo, CompanyShareholderInfo
-from get_data.smdas_stock import DailyNewsUrl, KlineGraph, TransactionDataSeparate
+from get_data.smdas_stock import KlineGraph
 
 config = dotenv_values("../.env")
 
@@ -37,8 +35,11 @@ engine = create_engine(db_url)
 # create the kline graph
 def select_kline_graph(stock_code, date):
     with Session(engine) as session:
-        kline = select(KlineGraph).where(KlineGraph.stock_code.in_(stock_code))\
+        kline = (
+            select(KlineGraph)
+            .where(KlineGraph.stock_code.in_(stock_code))
             .where(KlineGraph.date.in_(date))
+        )
         return kline
 
 
