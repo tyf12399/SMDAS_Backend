@@ -31,7 +31,17 @@ db_url = "".join(
 engine = create_engine(db_url)
 
 
-def create_user(account, password, identity, question, answer, nickname, state, login_time, create_time):
+def create_user(
+        account,
+        password,
+        identity,
+        question,
+        answer,
+        nickname,
+        state,
+        login_time,
+        create_time,
+):
     with Session(engine) as session:
         info = Info(
             account1=account,
@@ -49,24 +59,30 @@ def create_user(account, password, identity, question, answer, nickname, state, 
         session.commit()
 
 
-def select_user(account, nickname, state, create_time_start, create_time_end, log_in_time_start, log_in_time_end):
+def select_user(
+        account,
+        nickname,
+        state,
+        create_time_start,
+        create_time_end,
+        log_in_time_start,
+        log_in_time_end,
+):
     with Session(engine) as session:
-        query = select(Info).where(Info.nickname.in_([nickname]))\
-            .where(Info.account.in_([account]))\
-            .where(Info.state.in_([state]))\
-            .where(Info.create_time.in_([account]))\
-            .where(Info.create_time.in_([account]))\
-            .where(Info.login_time.in_([account]))\
+        query = (
+            select(Info)
+            .where(Info.nickname.in_([nickname]))
+            .where(Info.account.in_([account]))
+            .where(Info.state.in_([state]))
+            .where(Info.create_time.in_([account]))
+            .where(Info.create_time.in_([account]))
             .where(Info.login_time.in_([account]))
-        for user in session.scalars(query):
-            print(f"{user}")
+            .where(Info.login_time.in_([account]))
+        )
+        for _user in session.scalars(query):
+            print(f"{_user}")
         return query
 
 
-def delete_user():
-    with Session(engine) as session:
-
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     select_user()
