@@ -1,7 +1,5 @@
-from datetime import datetime
-
-from sqlalchemy import Column, TEXT, DATETIME, SMALLINT, BIGINT
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import TEXT, DATETIME, SMALLINT, BIGINT
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 # class the table
@@ -10,29 +8,14 @@ class Base(DeclarativeBase):
 
 
 class Info(Base):
-    __tablename__ = "info"
-    id = Column("id", BIGINT, primary_key=True)
-    account = Column("account", TEXT)
-    password = Column("password", TEXT)
-    identity = Column("identity", SMALLINT)
-    question = Column("question", TEXT)
-    answer = Column("answer", TEXT)
-    nickname = Column("nickname", TEXT)
-    state = Column("state", SMALLINT)
-    login_time = Column("login_time", DATETIME)
-    create_time = Column("create_time", DATETIME)
-
-    def mapping(self):
-        """convert to dict"""
-        return {
-            "id": self.id,
-            "account": self.account,
-            "password": self.password,
-            "identity": self.identity,
-            "question": self.question,
-            "answer": self.answer,
-            "nickname": self.nickname,
-            "state": self.state,
-            "login_at": self.login_time.strftime("%Y-%m-%d"),
-            "created_at": self.create_time.strftime("%Y-%m-%d"),
-        }
+    __tablename__ = 'info'
+    id: Mapped[int] = mapped_column('id', BIGINT, primary_key=True)
+    account: Mapped[str] = mapped_column('account', TEXT)
+    password: Mapped[str] = mapped_column('password', TEXT)
+    identity: Mapped[int] = mapped_column('identity', SMALLINT)
+    question: Mapped[str] = mapped_column('question', TEXT)
+    answer: Mapped[str] = mapped_column('answer', TEXT)
+    nickname: Mapped[str] = mapped_column('nickname', TEXT)
+    state: Mapped[int] = mapped_column('state', SMALLINT)
+    login_time: Mapped[str] = mapped_column('login_time', DATETIME)
+    create_time: Mapped[str] = mapped_column('create_time', DATETIME)

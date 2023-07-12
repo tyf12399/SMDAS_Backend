@@ -41,3 +41,5 @@ def select_kline_graph(stock_code, date):
             .where(KlineGraph.date.in_(date))
         )
         return kline
+
+
