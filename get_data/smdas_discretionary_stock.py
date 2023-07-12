@@ -8,14 +8,14 @@ class Base(DeclarativeBase):
 
 
 class DiscretionaryStock(Base):
-    __tablename__ = 'discretionary_stock'
+    __tablename__ = "discretionary_stock"
     id = Column(BIGINT, primary_key=True)
     account = Column(TEXT)
     stock_code = Column(TEXT)
 
 
 class PersonalityModule(Base):
-    __tablename__ = 'discretionary_stock'
+    __tablename__ = "discretionary_stock"
     id = Column(BIGINT, primary_key=True)
     account = Column(TEXT)
     preference = Column(TEXT)

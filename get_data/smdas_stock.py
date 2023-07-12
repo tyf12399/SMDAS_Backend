@@ -8,7 +8,7 @@ class Base(declarative_base()):
 
 # class the table
 class CompanyBasicInfo(Base):
-    __tablename__ = 'company_basic_info'
+    __tablename__ = "company_basic_info"
     id = Column(BIGINT, primary_key=True)
     stock_code = Column(TEXT)
     name = Column(TEXT)
@@ -19,7 +19,7 @@ class CompanyBasicInfo(Base):
 
 
 class CompanyFinancialInfo(Base):
-    __tablename__ = 'company_financial_info'
+    __tablename__ = "company_financial_info"
     id = Column(BIGINT, primary_key=True)
     stock_code = Column(TEXT)
     property = Column(DECIMAL)
@@ -34,7 +34,7 @@ class CompanyFinancialInfo(Base):
 
 
 class CompanyShareholderInfo(Base):
-    __tablename__ = 'company_shareholder_info'
+    __tablename__ = "company_shareholder_info"
     id = Column(BIGINT, primary_key=True)
     stock_code = Column(TEXT)
     name = Column(TEXT)
@@ -45,7 +45,7 @@ class CompanyShareholderInfo(Base):
 
 
 class DailyNewsUrl(Base):
-    __tablename__ = 'daily_news_url'
+    __tablename__ = "daily_news_url"
     id = Column(BIGINT, primary_key=True)
     url = Column(TEXT)
     title = Column(TEXT)
@@ -54,7 +54,7 @@ class DailyNewsUrl(Base):
 
 
 class KlineGraph(Base):
-    __tablename__ = 'kline_graph'
+    __tablename__ = "kline_graph"
     id = Column(BIGINT, primary_key=True)
     stock_code = Column(TEXT)
     date = Column(DATE)
@@ -69,7 +69,7 @@ class KlineGraph(Base):
 
 
 class TransactionDataSeparate(Base):
-    __tablename__ = 'transaction_data_separate'
+    __tablename__ = "transaction_data_separate"
     id = Column(BIGINT, primary_key=True)
     stock_code = Column(TEXT)
     date = Column(DATE)
