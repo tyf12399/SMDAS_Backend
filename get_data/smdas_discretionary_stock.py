@@ -21,3 +21,4 @@ class PersonalityModule(Base):
     preference: Mapped[str] = mapped_column(TEXT)
     prediction: Mapped[str] = mapped_column(TEXT)
     history: Mapped[str] = mapped_column(TEXT)
+      
