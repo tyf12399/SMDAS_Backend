@@ -1,10 +1,12 @@
+from datetime import datetime
+
 from dotenv import dotenv_values
-from sqlalchemy import create_engine, update, delete
+from sqlalchemy import create_engine, update, delete, select, and_
 from sqlalchemy.orm import Session
 
 from get_data.smdas_user import Info
 
-config = dotenv_values("../.env")
+config = dotenv_values(".env")
 
 host = config["host"]
 port = config["port"]
@@ -32,38 +34,25 @@ engine = create_engine(db_url)
 
 
 def create_user(
-    account,
-    password,
-    identity,
-    question,
-    answer,
-    nickname,
-    state,
-    login_time,
-    create_time,
+    password: str,
+    question: str,
+    answer: str,
+    nickname: str
 ):
-    with Session(engine) as session:
-        info = Info(
-            account1=account,
-            password1=password,
-            identity1=identity,
-            question1=question,
-            answer1=answer,
-            nickname1=nickname,
-            state1=state,
-            login_time1=login_time,
-            create_time1=create_time,
-        )
+    pass
 
-        session.add(info)
-        session.commit()
-
-
-def update_user_info(account, password, identity, question, answer, nickname):
-    with Session(engine) as session:
+def update_user_info(
+    account: str,
+    password: str,
+    identity: int,
+    question: str,
+    answer: str,
+    nickname: str,
+):
+    with engine.begin() as session:
         prep = (
             update(Info)
-            .where(Info.account.in_(account))
+            .where(Info.account == account)
             .values(password=password)
             .values(identity=identity)
             .values(question=question)
@@ -73,7 +62,14 @@ def update_user_info(account, password, identity, question, answer, nickname):
         session.execute(prep)
 
 
-def delete_user(account):
-    with Session(engine) as session:
-        prep = delete(Info.account.in_(account))
-        session.execute(prep)
+def check_user(
+    account: str,
+    password: str,
+):
+    with engine.begin() as session:
+        stmt = select(Info).where(Info.account == account)
+        result = session.execute(stmt).all()
+        if result[0][2] == password:
+            return {"data": [{"ifsuclog": True, "username": result[0][6]}]}
+        else:
+            return {"data": [{"ifsuclog": False, "username": result[0][6]}]}

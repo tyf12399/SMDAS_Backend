@@ -1,17 +1,13 @@
-import numpy as np
-import pandas as pd
+from datetime import datetime
+
 from dotenv import dotenv_values
-from sqlalchemy import create_engine, select, update, delete
+from sqlalchemy import create_engine, select, update, delete, and_
 from sqlalchemy.orm import Session
 
-from get_data.smdas_stock import (
-    CompanyBasicInfo,
-    CompanyFinancialInfo,
-    CompanyShareholderInfo,
-)
-from get_data.smdas_stock import KlineGraph, TransactionDataSeparate
+from get_data.smdas_stock import CompanyShareholderInfo
+from get_data.smdas_stock import KlineGraph, DailyNewsUrl
 
-config = dotenv_values("../.env")
+config = dotenv_values(".env")
 
 host = config["host"]
 port = config["port"]
@@ -38,200 +34,49 @@ db_url = "".join(
 engine = create_engine(db_url)
 
 
-# data insert
-def insert_data_to_kline_graph(csv_file_path):
-    dtype = {
-        "open_price": np.float64,
-        "stock_code": np.string_,
-        "close_price": np.float64,
-        "highest_price": np.float64,
-        "lowest_price": np.float64,
-        "total_amount": np.float64,
-        "total_sales": np.float64,
-        "increase": np.float64,
-    }
-    data = pd.read_csv("../sh_kline.csv", dtype=dtype, engine="python")
-    data.to_sql("kline_graph", engine, if_exists="append", index=False)
-
-
-# create the record
-def create_company_basic_info(
-    stock_code1, name1, intro1, leader1, distribution1, notice1
-):
-    with Session(engine) as session:
-        basic = CompanyBasicInfo(
-            stock_code=stock_code1,
-            name=name1,
-            intro=intro1,
-            leader=leader1,
-            distribution=distribution1,
-            notice=notice1,
-        )
-        session.add(basic)
-        session.commit()
-
-
-def create_company_financial_info(
-    stock_code2,
-    property2,
-    liability2,
-    interest2,
-    income2,
-    profit2,
-    asset_turnover2,
-    account_receivable_turnover2,
-    inventory_turnover2,
-    operating_cycle2,
-):
-    with Session(engine) as session:
-        financial = CompanyFinancialInfo(
-            stock_code=stock_code2,
-            property=property2,
-            liability=liability2,
-            interest=interest2,
-            income=income2,
-            profit=profit2,
-            asset_turnover=asset_turnover2,
-            account_receivable_turnover=account_receivable_turnover2,
-            inventory_turnover=inventory_turnover2,
-            operating_cycle=operating_cycle2,
-        )
-        session.add(financial)
-        session.commit()
-
-
-def create_company_shareholder_info(
-    stock_code3, name3, identity3, counting3, rate3, period3
-):
-    with Session(engine) as session:
-        shareholder = CompanyShareholderInfo(
-            stock_code=stock_code3,
-            name=name3,
-            identity=identity3,
-            counting=counting3,
-            rate=rate3,
-            period=period3,
-        )
-        session.add(shareholder)
-        session.commit()
-
-
-def create_kline_graph(
-    stock_code5,
-    date5,
-    open_price5,
-    close_price5,
-    highest_price5,
-    lowest_price5,
-    total_amount5,
-    total_sales5,
-    increase5,
-):
-    with Session(engine) as session:
-        kline = KlineGraph(
-            stock_code=stock_code5,
-            date=date5,
-            open_price=open_price5,
-            close_price=close_price5,
-            highest_price=highest_price5,
-            lowest_price=lowest_price5,
-            total_amount=total_amount5,
-            total_sales=total_sales5,
-            increase=increase5,
-        )
-        session.add(kline)
-        session.commit()
-
-
-def create_transaction_data_separate(stock_code6, date6, amount6, price6):
-    with Session(engine) as session:
-        transaction = TransactionDataSeparate(
-            stock_code=stock_code6, date=date6, amount=amount6, price=price6
-        )
-        session.add(transaction)
-        session.commit()
-
-
 # update the record
-def update_company_basic_info(stock_code1, intro1, leader1, distribution1, notice1):
-    with Session() as session:
-        prep = (
-            update(CompanyBasicInfo)
-            .where(CompanyBasicInfo.stock_code.in_(stock_code1))
-            .values(intro=intro1)
-            .values(leader=leader1)
-            .values(distribution=distribution1)
-            .values(notice=notice1)
-        )
-        session.execute(prep)
-
-
-def update_company_financial_info(
-    stock_code2,
-    property2,
-    liability2,
-    interest2,
-    income2,
-    profit2,
-    asset_turnover2,
-    account_receivable_turnover2,
-    inventory_turnover2,
-    operating_cycle2,
-):
-    with Session() as session:
-        prep = (
-            update(CompanyFinancialInfo)
-            .where(CompanyFinancialInfo.stock_code.in_(stock_code2))
-            .values(property=property2)
-            .values(liability=liability2)
-            .values(interest=interest2)
-            .values(income=income2)
-            .values(profit=profit2)
-            .values(asset_turnover=asset_turnover2)
-            .values(account_receivable_turnover=account_receivable_turnover2)
-            .values(inventory_turnover=inventory_turnover2)
-            .values(operating_cycle=operating_cycle2)
-        )
-        session.execute(prep)
-
-
 def update_company_shareholder_info(
-    stock_code3, name3, identity3, counting3, rate3, period3
+    stock_code: int,
+    name: str,
+    rank: int = None,
+    identity: str = None,
+    counting: int = None,
+    rate: float = None,
+    change_count: int = None,
+    change_percentage: float = None,
 ):
-    with Session() as session:
+    with engine.begin() as session:
         prep = (
             update(CompanyShareholderInfo)
-            .where(
-                CompanyShareholderInfo.stock_code.in_(stock_code3),
-                CompanyShareholderInfo.name.in_(name3),
-            )
-            .values(identity=identity3)
-            .values(counting=counting3)
-            .values(rate=rate3)
-            .values(period=period3)
+            .where(CompanyShareholderInfo.stock_code == stock_code)
+            .where(CompanyShareholderInfo.name == name)
+            .values(rank=rank)
+            .values(identity=identity)
+            .values(counting=counting)
+            .values(rate=rate)
+            .values(change_count=change_count)
+            .values(change_percentage=change_percentage)
         )
         session.execute(prep)
 
 
 def update_kline_graph_info(
-    stock_code4,
-    date4,
-    total_amount4,
-    total_sales4,
-    average_price4,
-    open_price4,
-    close_price4,
-    highest_price4,
-    lowest_price4,
-    increase4,
+    stock_code: str,
+    date: str,
+    total_amount: str = None,
+    total_sales4: str = None,
+    open_price4: str = None,
+    close_price4: str = None,
+    highest_price4: str = None,
+    lowest_price4: str = None,
+    increase4: str = None,
 ):
-    with Session() as session:
+    with engine.begin() as session:
         prep = (
             update(KlineGraph)
-            .where(KlineGraph.stock_code.in_(stock_code4), KlineGraph.date.in_(date4))
-            .values(total_amount=total_amount4)
+            .where(KlineGraph.stock_code == stock_code, KlineGraph.date == date)
+            .values(total_amount=total_amount)
             .values(total_sales=total_sales4)
-            .values(average_price=average_price4)
             .values(open_price=open_price4)
             .values(close_price=close_price4)
             .values(highest_price=highest_price4)
@@ -241,116 +86,116 @@ def update_kline_graph_info(
         session.execute(prep)
 
 
-def update_transaction_data_separate(id5, stock_code5, date5, amount5, price5):
-    with Session() as session:
-        prep = (
-            update(TransactionDataSeparate)
-            .where(KlineGraph.id.in_(id5))
-            .values(stock_code=stock_code5)
-            .values(date=date5)
-            .values(amount=amount5)
-            .values(price=price5)
-        )
-        session.execute(prep)
-
-
-# delete the record
-def delete_company_basic_info(stock_code1):
-    with Session() as session:
-        prep = delete(CompanyBasicInfo).where(
-            CompanyBasicInfo.stock_code.in_(stock_code1)
-        )
-        session.execute(prep)
-
-
-def delete_company_financial_info(stock_code2):
-    with Session() as session:
-        prep = delete(CompanyFinancialInfo).where(
-            CompanyFinancialInfo.stock_code.in_(stock_code2)
-        )
-        session.execute(prep)
-
-
-def delete_company_shareholder_info(stock_code3, name3):
-    with Session() as session:
+def delete_company_shareholder_info(stock_code3: str, name3: str):
+    with engine.begin() as session:
         prep = (
             delete(CompanyShareholderInfo)
-            .where(CompanyShareholderInfo.stock_code.in_(stock_code3))
-            .where(CompanyShareholderInfo.name.in_(name3))
+            .where(CompanyShareholderInfo.stock_code == stock_code3)
+            .where(CompanyShareholderInfo.name == name3)
         )
         session.execute(prep)
 
 
-def delete_kline_graph_info(stock_code5, date5):
-    with Session() as session:
+def delete_kline_graph_info(stock_code5: str, date5: str):
+    with Session(engine) as session:
         prep = (
             delete(KlineGraph)
-            .where(KlineGraph.stock_code.in_(stock_code5))
-            .where(KlineGraph.date.in_(date5))
+            .where(KlineGraph.stock_code == stock_code5)
+            .where(KlineGraph.date == date5)
         )
         session.execute(prep)
 
 
-def delete_transaction_data_separate(stock_code6, date6, amount6, price6):
-    with Session() as session:
-        prep = (
-            delete(TransactionDataSeparate)
-            .where(TransactionDataSeparate.stock_code.in_(stock_code6))
-            .where(TransactionDataSeparate.date.in_(date6))
-            .where(TransactionDataSeparate.amount.in_(amount6))
-            .where(TransactionDataSeparate.price.in_(price6))
-        )
-        session.execute(prep)
+def company_shareholder_info_query(stock_code: str = None, name: str = None):
+    with Session(engine) as session:
+        stmt = select(CompanyShareholderInfo)
+        # 构建查询条件
+        conditions = []
+        if stock_code is not None or stock_code == "":
+            stock_code = int(stock_code)
+            conditions.append(CompanyShareholderInfo.stock_code == stock_code)
+        if name is not None:
+            conditions.append(CompanyShareholderInfo.name == name)
+
+        if conditions:
+            stmt = stmt.where(and_(*conditions))
+
+        result = session.execute(stmt).all()
+        result = [
+            {
+                "account": item[0].id,
+                "stock_code": item[0].stock_code,
+                "rank": item[0].rank,
+                "name": item[0].name,
+                "identity": item[0].identity,
+                "counting": item[0].counting,
+                "rate": float(item[0].rate),
+                "change_count": item[0].change_count,
+                "change_percentage": str(item[0].change_percentage),
+            }
+            for item in result
+        ]
+        return result
 
 
-# basic query
-def select_basic_info(stock_code, name):
-    with Session() as session:
-        basic = (
-            select(CompanyBasicInfo)
-            .where(CompanyBasicInfo.stock_code.in_([stock_code]))
-            .where(CompanyBasicInfo.name.in_([name]))
-        )
-        return basic
+def kline_graph_query(
+    stock_code: str = None, date_start: str = None, date_end: str = None
+):
+    with Session(engine) as session:
+        stmt = select(KlineGraph)
+
+        conditions = []
+        if stock_code is not None:
+            conditions.append(KlineGraph.stock_code == stock_code)
+        if date_start is not None:
+            conditions.append(KlineGraph.date >= date_start)
+        if date_end is not None:
+            conditions.append(KlineGraph.date <= date_end)
+
+        if conditions:
+            stmt = stmt.where(and_(*conditions)).limit(1000)
+
+        result = session.execute(stmt).all()
+        result = [
+            {
+                "stock_code": item[0].stock_code,
+                "date": item[0].date,
+                "total_amount": item[0].total_amount,
+                "total_sales": item[0].total_sales,
+                "average_price": item[0].total_sales / item[0].total_amount,
+                "open_price": item[0].open_price,
+                "close_price": item[0].close_price,
+                "highest_price": item[0].highest_price,
+                "lowest_price": item[0].lowest_price,
+                "increase": item[0].increase,
+                "account": item[0].id,
+            }
+            for item in result
+        ]
+        return result
 
 
-def company_financial_info_query(stock_code, inventory_turnover):
-    with Session() as session:
-        financial = (
-            select(CompanyFinancialInfo)
-            .where(CompanyFinancialInfo.stock_code.in_([stock_code]))
-            .where(CompanyFinancialInfo.inventory_turnover.in_(inventory_turnover))
-        )
-        return financial
+def daily_news_query(date_start: str = None, date_end: str = None):
+    with Session(engine) as session:
+        stmt = select(DailyNewsUrl)
 
+        conditions = []
+        if date_start is not None:
+            conditions.append(DailyNewsUrl.date >= date_start)
+        if date_end is not None:
+            conditions.append(DailyNewsUrl.date <= date_end)
 
-def company_shareholder_info_query(stock_code, name):
-    with Session() as session:
-        shareholder = (
-            select(CompanyShareholderInfo)
-            .where(CompanyShareholderInfo.stock_code.in_([stock_code]))
-            .where(CompanyShareholderInfo.name.in_(name))
-        )
-        return shareholder
+        if conditions:
+            stmt = stmt.where(and_(*conditions)).limit(1000)
 
-
-def kline_graph_query(stock_code, date_start, date_end):
-    with Session() as session:
-        kline = (
-            select(KlineGraph)
-            .where(KlineGraph.stock_code.in_(stock_code))
-            .where(KlineGraph.date >= date_start)
-            .where(KlineGraph.date <= date_end)
-        )
-        return kline
-
-
-def transaction_data_separate_query(stock_code, date_start, date_end):
-    with Session() as session:
-        transaction = (
-            select(TransactionDataSeparate)
-            .where(TransactionDataSeparate.stock_code.in_([stock_code]))
-            .where(TransactionDataSeparate.date >= date_start)
-            .where(TransactionDataSeparate.date <= date_end)
-        )
-        return transaction
+        result = session.execute(stmt).all()
+        result = [
+            {
+                "id": item[0].title,
+                "title": item[0].title,
+                "link": item[0].link,
+                "date": item[0].date,
+            }
+            for item in result
+        ]
+        return result

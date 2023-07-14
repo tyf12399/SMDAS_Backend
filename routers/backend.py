@@ -5,40 +5,21 @@ Content management system apis.
 """
 
 from typing import Union, Dict, Any
+import json
 
 from fastapi import APIRouter, Request
 
-from services.user_control_admin import select_user
+from services.user_control_admin import (
+    select_user,
+    update_user_info,
+    update_user_password,
+    update_user_question,
+    delete_user,
+)
+
+from services import stock_control_back
 
 router = APIRouter(prefix="/backend", tags=["CMS"])
-
-
-# login and logout
-@router.get("/currentUser")
-async def currentUser():
-    """
-    Get current user info.
-    :return:
-    """
-    return {
-        "data": {
-            "name": "admin",
-            "id": "admin",
-            "access": "admin",
-        }
-    }
-
-
-@router.post("/login/account")
-async def login(request: Request):
-    """
-    Login.
-    :param request: request body{ username, password, autoLogin }
-    :return: response body{ status, type=account, currentAuthority }
-    """
-    body = await request.body()
-    print(body.decode())
-    return {"status": "ok", "type": "account", "currentAuthority": "admin"}
 
 
 # user management
@@ -70,7 +51,7 @@ async def user_list_get(
     """
     resp = dict()
 
-    user_list = select_user(
+    data = select_user(
         account,
         nickname,
         state,
@@ -79,9 +60,6 @@ async def user_list_get(
         login_start_time,
         login_end_time,
     )
-    keys_to_keep = ["account", "nickname", "state", "created_at", "login_at"]
-
-    data = [{key: user[key] for key in keys_to_keep} for user in user_list]
     resp["total"] = len(data)
     resp["data"] = data[(current - 1) * pageSize : current * pageSize]
     resp["page"] = current
@@ -94,11 +72,12 @@ async def user_list_get(
 async def user_info_change(request: Request) -> Dict[str, Any]:
     """
     Change user info.
-    :param request:
-    :return:
+    :param request: request body { account , nickname , state}
+    :return: {"status": "ok"}
     """
-    data = await request.body()
-    print(data.decode())
+    data: bytes = await request.body()
+    data: dict = json.loads(data)
+    update_user_info(data["account"], data["nickname"], data["state"])
     return {"status": "ok"}
 
 
@@ -109,8 +88,9 @@ async def user_info_delete(request: Request) -> Dict[str, Any]:
     :param request:
     :return:
     """
-    data = await request.body()
-    print(data.decode())
+    data: bytes = await request.body()
+    data: dict = json.loads(data)
+    delete_user(data["account"])
     return {"status": "ok"}
 
 
@@ -121,8 +101,10 @@ async def user_reset_password(request: Request) -> Dict[str, Any]:
     :param request:
     :return:
     """
-    data = await request.body()
-    print(data.decode())
+    data: bytes = await request.body()
+    data: dict = json.loads(data)
+    print(data["account"])
+    update_user_password(data["account"])
     return {"status": "ok"}
 
 
@@ -133,24 +115,121 @@ async def user_reset_security_question(request: Request) -> Dict[str, Any]:
     :param request: user id
     :return:
     """
-    data = await request.body()
-    print(data.decode())
+    data: bytes = await request.body()
+    data: dict = json.loads(data)
+    update_user_question(data["account"])
     return {"status": "ok"}
 
 
-# stock basic management
-@router.get("/stock_basic/list_get")
-async def stock_basic_list_get(
+@router.get("/stock_shareholder/list_get")
+async def stock_shareholder_list_get(
     current: int,
     pageSize: int,
-    code: Union[str, None] = None,
+    stock_code: Union[str, None] = None,
     name: Union[str, None] = None,
-    industry: Union[str, None] = None,
-    area: Union[str, None] = None,
-    market: Union[str, None] = None,
-    exchange: Union[str, None] = None,
-    list_status: Union[str, None] = None,
-    list_date_start: Union[str, None] = None,  # YYYY-MM-DD
-    list_date_end: Union[str, None] = None,  # YYYY-MM-DD
 ) -> Dict[str, Any]:
-    pass
+    resp = dict()
+
+    data = stock_control_back.company_shareholder_info_query(stock_code, name)
+    resp["total"] = len(data)
+    resp["data"] = data[(current - 1) * pageSize : current * pageSize]
+    resp["page"] = current
+    resp["success"] = True
+    return resp
+
+
+@router.post("/stock_shareholder/info_change")
+async def stock_shareholder_info_change(request: Request):
+    """
+
+    :param request:
+    :return:
+    """
+    data: bytes = await request.body()
+    data: dict = json.loads(data)
+    print(data)
+    stock_control_back.update_company_shareholder_info(
+        data["stock_code"],
+        data["name"],
+        data["identity"],
+        data["counting"],
+        data["rate"],
+    )
+    return {"status": "ok"}
+
+
+@router.post("/stock_shareholder/info_delete")
+async def stock_shareholder_info_delete(request: Request):
+    data: bytes = await request.body()
+    data: dict = json.loads(data)
+    stock_control_back.delete_company_shareholder_info(data["stock_code"], data["name"])
+    return {"status": "ok"}
+
+
+@router.get("/kline_graph/list_get")
+async def stock_kline_list_get(
+    current: int,
+    pageSize: int,
+    stock_code: Union[str, None] = None,
+    start_time: Union[str, None] = None,
+    end_time: Union[str, None] = None,
+) -> Dict[str, Any]:
+    resp = dict()
+
+    data = stock_control_back.kline_graph_query(
+        stock_code,
+        start_time,
+        end_time,
+    )
+    resp["total"] = len(data)
+    resp["data"] = data[(current - 1) * pageSize : current * pageSize]
+    resp["page"] = current
+    resp["success"] = True
+    return resp
+
+
+@router.post("/kline_graph/info_change")
+async def stock_kline_info_change(request: Request):
+    data: bytes = await request.body()
+    data: dict = json.loads(data)
+    stock_control_back.update_kline_graph_info(
+        data["stock_code"],
+        data["name"],
+        data["identity"],
+        data["counting"],
+        data["rate"],
+        data["period"],
+    )
+    return {"status": "ok"}
+
+
+@router.post("/kline_graph/info_delete")
+async def stock_kline_info_delete(request: Request):
+    data: bytes = await request.body()
+    data: dict = json.loads(data)
+    stock_control_back.delete_company_shareholder_info(data["stock_code"], data["date"])
+    return {"status": "ok"}
+
+
+@router.get("/daily_news/list_get")
+async def get_daily_news(
+    current: int,
+    pageSize: int,
+    start_time: Union[str, None] = None,
+    end_time: Union[str, None] = None,
+):
+    resp = dict()
+
+    data = stock_control_back.daily_news_query(start_time, end_time)
+
+    resp["total"] = len(data)
+    resp["data"] = data[(current - 1) * pageSize : current * pageSize]
+    resp["page"] = current
+    resp["success"] = True
+
+    return resp
+
+
+@router.post("/model/choose")
+async def model_choose(request: Request):
+    return {"status": "ok"}
