@@ -1,5 +1,7 @@
 """crawler for the website: https://www.eastmoney.com/ and save it in the database"""
 import requests
+from datetime import datetime
+
 from bs4 import BeautifulSoup
 from dotenv import dotenv_values
 from sqlalchemy import create_engine, insert
@@ -59,7 +61,9 @@ class Crawler:
             title = _news.a.text
             # if link start with 'https://finance.eastmoney.com/a/', save it
             if link.startswith("https://finance.eastmoney.com/a/"):
-                finance_news.append({"title": title, "link": link})
+                finance_news.append(
+                    {"title": title, "link": link, "date": datetime.now()}
+                )
         return finance_news
 
     def save_news(self):
@@ -68,10 +72,13 @@ class Crawler:
         :return:
         """
         finance_news = self.get_news()
-        print(len(finance_news))
         with Session(engine) as session:
             session.execute(
                 insert(DailyNewsUrl),
                 finance_news,
             )
             session.commit()
+
+
+if __name__ == "__main__":
+    print(datetime.now())

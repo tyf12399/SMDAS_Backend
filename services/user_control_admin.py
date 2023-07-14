@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from dotenv import dotenv_values
 from sqlalchemy import Result, create_engine, update, delete, select, and_, between
 from sqlalchemy.orm import Session, aliased
@@ -63,44 +65,54 @@ def select_user(
         # 应用查询条件
         if conditions:
             stmt = stmt.where(and_(*conditions))
-            print(stmt)
 
         # 执行查询
         result = session.execute(stmt).all()
-
-        result = [item[0].mapping() for item in result]
+        result = [
+            {
+                "account": item[0].account,
+                "nickname": item[0].nickname,
+                "state": item[0].state,
+                "login_at": datetime.strftime(item[0].login_time, "%Y-%m-%d"),
+                "created_at": datetime.strftime(item[0].create_time, "%Y-%m-%d"),
+            }
+            for item in result
+        ]
         return result
 
 
-def delete_user(account):
-    with Session(engine) as session:
-        prep = delete(Info).where(Info.account.in_(account))
+def delete_user(account: str):
+    with engine.begin() as session:
+        prep = delete(Info).where(Info.account == account)
         session.execute(prep)
 
 
-def update_user_question(account):
-    with Session(engine) as session:
-        prep = update(Info).where(Info.account.in_(account)).values(question="")
+def update_user_question(account: str):
+    with engine.begin() as session:
+        prep = (
+            update(Info).where(Info.account == account).values(question="", answer="")
+        )
         session.execute(prep)
 
 
-def update_user_answer(account):
-    with Session(engine) as session:
-        prep = update(Info).where(Info.account.in_(account)).values(answer="")
+def update_user_password(account: str):
+    with engine.begin() as session:
+        prep = update(Info).where(Info.account == account).values(password="123456")
         session.execute(prep)
 
 
-def update_user_password(account):
-    with Session(engine) as session:
-        prep = update(Info).where(Info.account.in_(account)).values(password="123456")
-        session.execute(prep)
-
-
-def update_user_info(account, nickname, state):
-    with Session(engine) as session:
+def update_user_info(account: str, nickname: str, state: int) -> None:
+    """
+    To update the user_info in the front end.
+    :param account: User's account.
+    :param nickname: User's nickname.
+    :param state: To imply the state of the user.
+    :return:
+    """
+    with engine.begin() as session:
         prep = (
             update(Info)
-            .where(Info.account.in_(account))
+            .where(Info.account == account)
             .values(nickname=nickname, state=state)
         )
         session.execute(prep)

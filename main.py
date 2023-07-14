@@ -3,6 +3,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from routers import backend
+from routers import frontend
+from routers import login_backend
 
 app = FastAPI()
 
@@ -17,3 +19,5 @@ app.add_middleware(
 )
 
 app.include_router(backend.router, prefix="/api")
+app.include_router(frontend.router, prefix="/api")
+app.include_router(login_backend.router, prefix="/api")
