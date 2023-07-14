@@ -119,6 +119,7 @@ def sz_stock_list():
         ]
         return result
 
+
 def his_record(code):
     with Session(engine) as session:
         stmt = select(KlineGraph)

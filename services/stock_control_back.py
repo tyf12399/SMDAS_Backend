@@ -118,7 +118,7 @@ def company_shareholder_info_query(stock_code: str = None, name: str = None):
             conditions.append(CompanyShareholderInfo.name == name)
 
         if conditions:
-            stmt = stmt.where(and_(*conditions))
+            stmt = stmt.where(and_(*conditions)).limit(1000)
 
         result = session.execute(stmt).all()
         result = [
