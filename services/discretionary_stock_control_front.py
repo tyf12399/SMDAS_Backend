@@ -134,7 +134,11 @@ def discretionary_stock_query(account: str):
         result = [int(item[2]) for item in result]
 
     with engine2.begin() as session:
-        stmt = select(KlineGraph).where(KlineGraph.stock_code.in_(result))
+        stmt = (
+            select(KlineGraph)
+            .where(KlineGraph.stock_code.in_(result))
+            .where(KlineGraph.date.in_(["2023-07-07"]))
+        )
         finalresult = session.execute(stmt).all()
 
         result = [

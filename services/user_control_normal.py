@@ -35,7 +35,7 @@ engine = create_engine(db_url)
 
 
 def create_user(password: str, question: str, answer: str, nickname: str):
-    account = hashlib.md5((nickname + password).encode("utf-8")).digest()[:16].hex()
+    account = hashlib.md5((password+datetime.now().strftime("%Y%m%d%H%M%S")).encode("utf-8")).digest()[:16].hex()
     with engine.begin() as session:
         session.execute(
             insert(Info),
@@ -88,3 +88,27 @@ def check_user(
             return {"ifsuclog": True, "username": result[0][6]}
         else:
             return {"ifsuclog": False, "username": result[0][6]}
+
+
+def reset_password_get_question(account: str):
+    """
+    Get user's security question
+    :param account: user's account
+    :return: security question
+    """
+    with engine.begin() as session:
+        stmt = select(Info)
+        conditions = []
+        conditions.append(Info.account == account)
+        if conditions:
+            stmt = stmt.where(and_(*conditions))
+
+        result = session.execute(stmt).all()
+        result_question = [(item[4]) for item in result]
+        print(result_question)
+        result_answer = [(item[5]) for item in result]
+        print(result_answer)
+        return result_question
+
+
+
